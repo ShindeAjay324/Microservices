@@ -12,15 +12,15 @@ import com.example.consumer.CartConsumer;
 @RequestMapping("/v1/api/order")
 public class OrderRestController {
 
-	//@Autowired
-	//CartConsumer cartConsumer;
+	@Autowired
+	private CartConsumer cartConsumer;
 	
-	@GetMapping("/")
+	@GetMapping("/place")
 	public ResponseEntity<String> placeOrder(){
 		
-		//String cartResponse = cartConsumer.getCartService();
-		//return ResponseEntity.ok("Order Placed With => "+cartResponse);
-		return ResponseEntity.ok("Order Placed With => ");
+		String cartResponse = cartConsumer.getCartService();
+		return ResponseEntity.ok("Order Placed With => "+cartResponse);
+		//return ResponseEntity.ok("Order Placed With => ");
 	}
 	
 }
