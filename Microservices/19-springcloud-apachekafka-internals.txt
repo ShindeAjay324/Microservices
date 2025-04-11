@@ -1,0 +1,49 @@
+ApacheKafka
+===========
+*) Kafka is Open Source and MQ S/W.
+*) Implemented by Apache.
+*) Uses LoadBalancer for Cluster (Multiple Message Broker)
+	In case of ActiveMQ, there was only one MessageBroker,but in Kafka there will be multiple Brokers.
+	ApacheKafka -> min 3 broker and based on the no of consumer, these broker will increased by zookeeper[R&D Server]
+
+*) Uses our application protocol.[protocol independent, while using don't mention any protocol.]
+
+*) Kafka Supports only Pub/Sub Model (Topics).
+   Even if we want to send message to one consumer use Topic only.
+
+*) Kafka accepts only Serialized data for partitions.
+*) Partitions contains index number [offset]
+*) KafkaTemplate<K,V> is used at Producer application to send data to Kafka S/w.
+
+*) In case of non-Spring Boot application(Java app)
+Ref this:
+https://docs.spring.io/spring-kafka/reference/html/#with-java-configuration-no-spring-boot
+
+*) Spring boot supports integration with kafka, we need to use JARs
+
+<dependency>
+    <groupId>org.springframework.kafka</groupId>
+    <artifactId>spring-kafka</artifactId>
+</dependency>
+
+*) It gives auto-configuration for KafkaTemplate<K,V> and @KafkaListener.
+
+*) Both Producer and Consumer are connected using TopicName.
+
+    @Bean
+    public NewTopic topic() {
+        return TopicBuilder.name("myabc")
+                .partitions(10)
+                .replicas(1)
+                .build();
+    }   
+
+--cmd--
+.\bin\windows\kafka-topics.bat 
+  --create 
+  --topic myabc 
+  --partitions 10 
+  --replicas 1
+  --bootstrap-server localhost:9092
+==================================================================
+

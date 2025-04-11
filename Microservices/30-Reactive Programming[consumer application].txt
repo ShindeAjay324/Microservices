@@ -1,0 +1,192 @@
+ Reactive Programming[consumer application]
+
+1. RestTemplate : It is a class, supports HTTP Protocol connects with any language Producer application
+		  Supported only Synchronous Communication.
+
+2. LoadBalancerClient/ Open Feign : Supported for MS# application communication
+
+WebClient:-
+=> It is a Reactive Client.
+=> RestTemplate will not support reactive calls(request)
+=> It is internally Asynchronous communication.
+
+
+--coding steps---
+1. Define WebClient object using base URL
+2. Provide call details in order
+  HttpMethod
+  PATH + PathVariables
+  Body With Type
+  Execute
+  Convert Response to Type(Mono/Flux)
+  Subscribe data
+
+=> Here we need to use Spring Boot Reactive API (Webflux)
+=> Make sure port numbers are not same compared to Producer application
+
+Name: SpringBootReactiveConsumerEx
+Dep : Spring Boot Reactive Web, Lombok
+
+1. Runner class
+package com.app.nitin.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.app.nitin.entity.Student;
+
+import reactor.core.publisher.Mono;
+
+@Component
+public class TestProducerCallRunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		//1. Create WebClient object using base URL 
+		WebClient client = WebClient.create("http://localhost:9090/student");
+		
+		//call 
+		/*
+		Mono<Student> result = 
+				client
+				.post() //Http Method
+				.uri("/create") //PATH
+				.body(Mono.just(new Student("AA256", "SAM", 300.0)), Student.class) //Body
+				.retrieve() // execute
+				.bodyToMono(Student.class); //convert response
+		
+		System.out.println("FROM CONSUMER ---->");
+		//access result
+		result.subscribe(System.out::println);
+		*/
+		
+		
+		/*
+		Flux<Student> flux =  client.get().uri("/all").retrieve().bodyToFlux(Student.class);
+		flux.doOnNext(System.out::println).blockLast();
+		*/
+		
+		Mono<Student> result = 
+		client.get().uri("/fetch/AA256").retrieve() 
+		.bodyToMono(Student.class);
+		result.subscribe(System.out::println);
+	}
+
+}
+
+2. Entity class
+package com.app.nitin.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Student {
+
+	private String id;
+	private String name;
+	private Double fee;
+}
+====================================================================
+3. Repository interface
+package com.app.nitin.repo;
+
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+
+import com.app.nitin.entity.Student;
+
+public interface StudentRepository 
+	extends ReactiveMongoRepository<Student, String>{
+
+}
+
+4. Service class
+package com.app.nitin.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.app.nitin.entity.Student;
+import com.app.nitin.repo.StudentRepository;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@Service
+public class StudentService {
+
+	@Autowired
+	private StudentRepository repo;
+
+	public Mono<Student> save(Student student) {
+		return repo.save(student);
+	}
+
+	public Mono<Student> getOne(String id) {
+		return repo.findById(id).switchIfEmpty(Mono.empty());
+	}
+
+	public Flux<Student> findAll() {
+		return repo.findAll().switchIfEmpty(Flux.empty());
+	}
+
+	public Mono<Void> delete(String id) {
+		return repo.deleteById(id);
+	}
+}
+
+5. RestController
+package com.app.nitin.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.nitin.entity.Student;
+import com.app.nitin.service.StudentService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/student")
+public class StudentRestController {
+
+	@Autowired
+	private StudentService service;
+
+	@PostMapping("/create")
+	public Mono<Student> save(@RequestBody Student student) {
+		return service.save(student);
+	}
+	
+	@GetMapping("/fetch/{id}")
+	public Mono<Student> getOne(@PathVariable String id) {
+		return service.getOne(id);
+	}
+	
+	@GetMapping("/all")
+	public Flux<Student> fetchAll() {
+		return service.findAll();
+	}
+	
+	@DeleteMapping("/remove/{id}")
+	public Mono<Void> deleteOne(@PathVariable String id) {
+		return service.delete(id);
+		/* service.delete(id);
+		return Mono.just("Removed Id "+id); */
+	}
+	
+}
+
+6. Execution order
+cmd> mongod
+Run application

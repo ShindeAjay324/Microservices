@@ -1,0 +1,15 @@
+Monolithic Application
+======================
+
+Monolithic Application:-
+	If an application is developed as a single unit (multiple service together) and finally made as single deployable 
+	component (1 WAR FILE/ 1 JAR FILE).
+
+Application = Set of Services
+Project     = Set of Modules
+
+ex: Amazon Application
+    Services = Search, Cart, Payment, Feedback..etc
+
+Life Cycle:- Plan -> Code -> Build -> Deploy -> Monitor
+

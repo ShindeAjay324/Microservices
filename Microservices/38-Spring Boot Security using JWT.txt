@@ -1,0 +1,20 @@
+Spring Boot Security using JWT
+==============================
+
+1) User Register
+   => Read data as JSON From POSTMAN and Store in DB
+
+
+2) User Login and Token Generation
+=> Define JWT Token service to generate token after login success
+
+3) Token validation and Service
+=> Check Auth Header using Filter and validate using JwtUtil.
+	if valid then continue to service/controller code.
+
+
+
+
+
+
+

@@ -1,0 +1,157 @@
+MQs - Message Queues
+
+*) Session(I) is given by Sun/Oracle, this is used to make connection and create Message to send data to Consumer.
+
+-> interface is given,
+1. Write Subclass (or Implementation class) and create object
+2. Anonymous Inner class [MAM]
+	new InterfaceName() {
+   		//override methods
+ 	}
+
+3. If it is FI(Functional interface), [SAM]
+  	Define Lambda Expression
+
+==Note=============================================================================================
+1. Both Producer and Consumer must be connected to same destination.
+2. Both internally uses JMS API that is Session support
+3. They are connected using TCP protocol and PORT number 61616
+4. To view Web UI output use HTTP porotocol and PORT 8161.
+5. JmsTemplate (C) is pre-configured by Spring Boot.
+6. Incase of Consumer application we need to apply @EnableJms and also use @JmsListener.
+===================================================================================================
+
+ProducerCode  
+------------
+Dependency : activemq
+
+package com.app.nitin.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ProducerService {
+
+	@Autowired
+	private JmsTemplate jt;
+
+	@Value("${my.app.desti-name}")
+	private String destinationName;
+
+	public void sendMessage(String message) {
+		jt.send(destinationName, session -> session.createTextMessage(message));
+		System.out.println("MESSAGE SENT BY PRODUCER :: "+message);
+	}
+}
+
+-------
+package com.app.nitin.runner;
+
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.nitin.service.ProducerService;
+
+@Component
+public class ProducerRunner implements CommandLineRunner {
+
+	@Autowired
+	private ProducerService service;
+	
+	@Override
+	public void run(String... args) throws Exception {
+		service.sendMessage("HELLO :: "+new Date());
+	}
+
+}
+
+application.properties
+----------------------
+spring.application.name=SpringProviderMessageService
+
+#Connect with MOM
+spring.activemq.broker-url=tcp://localhost:61616
+spring.activemq.user=admin
+spring.activemq.password=admin
+
+#Communication Type [P2P]
+spring.jms.pub-sub-domain=false
+
+#Destination name
+my.app.desti-name=my-q-abc1
+
+====================================================================================
+Consumer Code
+-------------
+Dependency : activemq
+
+@SpringBootApplication
+@EnableJms
+public class SpringConsumerMessageServiceApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringConsumerMessageServiceApplication.class, args);
+	}
+
+}
+
+=======================
+package com.app.nitin.service;
+
+import org.springframework.jms.annotation.JmsListener;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ConsumerService {
+	
+	@JmsListener(destination = "${my.app.desti-name}")
+	public void readMessage(String message) {
+		System.out.println(message);
+	}
+	
+}
+
+application.properties
+----------------------
+spring.application.name=SpringConsumerMessageService
+
+#Connect with MOM
+spring.activemq.broker-url=tcp://localhost:61616
+spring.activemq.user=admin
+spring.activemq.password=admin
+
+#Communication Type [P2P]
+spring.jms.pub-sub-domain=false
+
+#Destination name
+my.app.desti-name=my-q-abc1
+
+
+Note: Run ActiveMQ, and check in web by typing , http://localhost:8161/admin and enter un(admin) and pwd(admin).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
